@@ -5,8 +5,8 @@ Install-WindowsFeature Web-Basic-Auth
 $nameServer = Read-Host "Nombre del servidor FTP"
 New-Item -ItemType Directory -Path "C:\ServidorFTP\" -Force
 New-Item -ItemType Directory -Path "C:\ServidorFTP\General" -Force
-New-Item -ItemType Directory -Path "C:\ServidorFTP\Reprobados_8" -Force
-New-Item -ItemType Directory -Path "C:\ServidorFTP\Recursadores_8" -Force
+New-Item -ItemType Directory -Path "C:\ServidorFTP\Reprobados" -Force
+New-Item -ItemType Directory -Path "C:\ServidorFTP\Recursadores" -Force
 
 # Crear un nuevo sitio FTP
 New-WebFtpSite -Name "$nameServer" -IPAddress "*" -Port 21
@@ -31,15 +31,15 @@ $FTPUserGroup.SetInfo()
 #Dar privilegios de lectura y escritura a los miembros del grupo FTP
 Add-WebConfiguration "/system.ftpServer/security/authorization" -Value @{accessType="Allow";users="*";permissions=3} -PSPath IIS:\ -Location "$nameServer"
 Remove-WebConfigurationProperty -PSPath IIS:\ -Location "$nameServer/General" -Filter "system.ftpServer/security/authorization" -Name "."
-Remove-WebConfigurationProperty -PSPath IIS:\ -Location "$nameServer/Reprobados_8" -Filter "system.ftpServer/security/authorization" -Name "."
-Remove-WebConfigurationProperty -PSPath IIS:\ -Location "$nameServer/Recursadores_8" -Filter "system.ftpServer/security/authorization" -Name "."
+Remove-WebConfigurationProperty -PSPath IIS:\ -Location "$nameServer/Reprobados" -Filter "system.ftpServer/security/authorization" -Name "."
+Remove-WebConfigurationProperty -PSPath IIS:\ -Location "$nameServer/Recursadores" -Filter "system.ftpServer/security/authorization" -Name "."
 
 Add-WebConfiguration "/system.ftpServer/security/authorization" -Value @{accessType="Allow";users="*";permissions=1} -PSPath IIS:\ -Location "$nameServer/General"
 Add-WebConfiguration "/system.ftpServer/security/authorization" -Value @{accessType="Allow";roles="reprobados";permissions=3} -PSPath IIS:\ -Location "$nameServer/General"
 Add-WebConfiguration "/system.ftpServer/security/authorization" -Value @{accessType="Allow";roles="recursadores";permissions=3} -PSPath IIS:\ -Location "$nameServer/General"
 
-Add-WebConfiguration "/system.ftpServer/security/authorization" -Value @{accessType="Allow";roles="reprobados";permissions=3} -PSPath IIS:\ -Location "$nameServer/Reprobados_8"
-Add-WebConfiguration "/system.ftpServer/security/authorization" -Value @{accessType="Allow";roles="recursadores";permissions=3} -PSPath IIS:\ -Location "$nameServer/Recursadores_8"
+Add-WebConfiguration "/system.ftpServer/security/authorization" -Value @{accessType="Allow";roles="reprobados";permissions=3} -PSPath IIS:\ -Location "$nameServer/Reprobados"
+Add-WebConfiguration "/system.ftpServer/security/authorization" -Value @{accessType="Allow";roles="recursadores";permissions=3} -PSPath IIS:\ -Location "$nameServer/Recursadores"
 
 #Habilitar las conexiones mediante SSL si es posible
 #Set-ItemProperty "IIS:\Sites\FTP" -Name ftpServer.security.ssl.controlChannelPolicy -Value 
@@ -83,11 +83,6 @@ function CrearUsuarioFTP {
     $User = [ADSI]"WinNT://$SID"
     $Group.Add($User.Path)
 
-    # Asignar permisos de acceso a la carpeta personal
-    #$acl = Get-Acl $rutaCarpetaPersonal
-    #$permission = New-Object System.Security.AccessControl.FileSystemAccessRule($nombreUsuario, "FullControl", "ContainerInherit,ObjectInherit", "None", "Allow")
-    #$acl.SetAccessRule($permission)
-    #Set-Acl $rutaCarpetaPersonal $acl
 }
 
 # Pedir al usuario cuántos usuarios desea agregar a cada lista
@@ -134,10 +129,10 @@ foreach ($usuario in $reprobados) {
     #New-Item -ItemType Directory -Path "C:\ServidorFTP\LocalUser\$nombreUsuario\Reprobados_8" -Force
 
     cmd /c mklink /d "C:\ServidorFTP\LocalUser\$nombreUsuario\General\" "C:\ServidorFTP\General\"
-    cmd /c mklink /d "C:\ServidorFTP\LocalUser\$nombreUsuario\Reprobados_8\" "C:\ServidorFTP\Reprobados_8\"
+    cmd /c mklink /d "C:\ServidorFTP\LocalUser\$nombreUsuario\Reprobados\" "C:\ServidorFTP\Reprobados\"
 
     Add-WebConfiguration "/system.ftpServer/security/authorization" -Value @{accessType="Allow";roles="reprobados";permissions=3} -PSPath IIS:\ -Location "$nameServer/LocalUser/$nombreUsuario/General"
-    Add-WebConfiguration "/system.ftpServer/security/authorization" -Value @{accessType="Allow";roles="reprobados";permissions=3} -PSPath IIS:\ -Location "$nameServer/LocalUser/$nombreUsuario/Reprobados_8"
+    Add-WebConfiguration "/system.ftpServer/security/authorization" -Value @{accessType="Allow";roles="reprobados";permissions=3} -PSPath IIS:\ -Location "$nameServer/LocalUser/$nombreUsuario/Reprobados"
     Add-WebConfiguration "/system.ftpServer/security/authorization" -Value @{accessType="Allow";roles="reprobados";permissions=3} -PSPath IIS:\ -Location "$nameServer/LocalUser/$nombreUsuario/$nombreUsuario"
 }
 
@@ -153,14 +148,16 @@ foreach ($usuario in $recursadores) {
     # New-Item -ItemType Directory -Path "C:\ServidorFTP\LocalUser\$nombreUsuario\Recursadores_8" -Force
 
     cmd /c mklink /d "C:\ServidorFTP\LocalUser\$nombreUsuario\General\" "C:\ServidorFTP\General\"
-    cmd /c mklink /d "C:\ServidorFTP\LocalUser\$nombreUsuario\Recursadores_8\" "C:\ServidorFTP\Recursadores_8\"
+    cmd /c mklink /d "C:\ServidorFTP\LocalUser\$nombreUsuario\Recursadores\" "C:\ServidorFTP\Recursadores\"
 
     Add-WebConfiguration "/system.ftpServer/security/authorization" -Value @{accessType="Allow";roles="recursadores";permissions=3} -PSPath IIS:\ -Location "$nameServer/LocalUser/$nombreUsuario/General"
-    Add-WebConfiguration "/system.ftpServer/security/authorization" -Value @{accessType="Allow";roles="recursadores";permissions=3} -PSPath IIS:\ -Location "$nameServer/LocalUser/$nombreUsuario/Recursadores_8"
+    Add-WebConfiguration "/system.ftpServer/security/authorization" -Value @{accessType="Allow";roles="recursadores";permissions=3} -PSPath IIS:\ -Location "$nameServer/LocalUser/$nombreUsuario/Recursadores"
     Add-WebConfiguration "/system.ftpServer/security/authorization" -Value @{accessType="Allow";roles="recursadores";permissions=3} -PSPath IIS:\ -Location "$nameServer/LocalUser/$nombreUsuario/$nombreUsuario"   
 }
 
 cmd /c mklink /d "C:\ServidorFTP\LocalUser\Public\" "C:\ServidorFTP\General"
+Add-WebConfiguration "/system.ftpServer/security/authorization" -Value @{accessType="Allow";users="*";permissions=1} -PSPath IIS:\ -Location "$nameServer/LocalUser/Public"
+
 Restart-WebItem "IIS:\Sites\$nameServer"
 
 Write-Host "El servidor FTP ha sido configurado exitosamente."
